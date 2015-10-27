@@ -45,14 +45,7 @@ RUN passenger-install-nginx-module --auto
 COPY asset/nginx.conf /etc/nginx/
 COPY asset/default /etc/nginx/sites-available/
 
-#COPY asset/passenger.conf /etc/apache2/conf-available/
-#COPY asset/passenger.load /etc/apache2/mods-available/
-#RUN a2enconf passenger
-##RUN a2enmod passenger
-#RUN chown -R www-data:www-data /var/lib/redmine
-#COPY asset/apache2.conf /etc/apache2/
-#COPY asset/000-default.conf /etc/apache2/sites-available/
-
+RUN chown -R www-data:www-data /var/lib/redmine
 
 COPY asset/init /root/
 ENV DEBIAN_FRONTEND dialog
