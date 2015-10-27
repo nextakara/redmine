@@ -6,11 +6,20 @@ WORKDIR /root/
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
+RUN apt-get remove nginx nginx-full nginx-light nginx-common
 RUN apt-get -y install wget net-tools build-essential tar
-RUN apt-get -y install apache2
 RUN apt-get -y install mysql-server mysql-client libmysqlclient-dev
 RUN apt-get -y install libxml2-dev zlib1g-dev ImageMagick libmagickcore-dev libmagickwand-dev
 RUN apt-get -y install ruby ruby-dev
+RUN apt-get -y install libcurl3-dev
+RUN apt-get -y install libssl-dev
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 561F9B9CAC40B2F7
+COPY asset/passenger.list /etc/apt/sources.list.d/
+RUN chown root.root /etc/apt/sources.list.d/*
+RUN apt-get -y install apt-transport-https
+RUN apt-get update
+RUN apt-get -y install nginx-extras
+RUN apt-get -y install passenger
 
 # mysql
 COPY asset/my.cnf /etc/mysql/my.cnf
@@ -30,17 +39,19 @@ RUN bundle exec rake generate_secret_token
 ENV RAILS_ENV production
 RUN service mysql start && bundle exec rake db:migrate
 RUN gem install passenger --no-rdoc --no-ri
-RUN apt-get -y install apache2-dev
-RUN apt-get -y install libcurl3-dev
 
-RUN passenger-install-apache2-module --auto
-COPY asset/passenger.conf /etc/apache2/conf-available/
-COPY asset/passenger.load /etc/apache2/mods-available/
-RUN a2enconf passenger
-RUN a2enmod passenger
-RUN chown -R www-data:www-data /var/lib/redmine
-COPY asset/apache2.conf /etc/apache2/
-COPY asset/000-default.conf /etc/apache2/sites-available/
+
+RUN passenger-install-nginx-module --auto
+COPY asset/nginx.conf /etc/nginx/
+COPY asset/default /etc/nginx/sites-available/
+
+#COPY asset/passenger.conf /etc/apache2/conf-available/
+#COPY asset/passenger.load /etc/apache2/mods-available/
+#RUN a2enconf passenger
+##RUN a2enmod passenger
+#RUN chown -R www-data:www-data /var/lib/redmine
+#COPY asset/apache2.conf /etc/apache2/
+#COPY asset/000-default.conf /etc/apache2/sites-available/
 
 
 COPY asset/init /root/
